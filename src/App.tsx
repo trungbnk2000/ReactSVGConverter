@@ -1,88 +1,230 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+// src/App.tsx
+import { useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
+import CodeMirror from '@uiw/react-codemirror';
+import { xml } from '@codemirror/lang-xml';
+import { javascript } from '@codemirror/lang-javascript';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { EditorView } from '@codemirror/view';
+import { Copy, Download, AlertCircle } from 'lucide-react';
+import { useConverterStore } from './store/converterStore';
+import { useClipboard } from './hooks/useClipboard';
+import { useDebounce } from './hooks/useDebounce';
+import { Button } from './components/ui/Button';
+import { Toggle } from './components/ui/Toggle';
+import { downloadFile, generateFilename } from './utils/helpers';
+import { DEFAULT_SVG_EXAMPLE } from './utils/constants';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const {
+    svgInput,
+    setSvgInput,
+    generatedCode,
+    error,
+    isConverting,
+    convert,
+    config,
+    updateConfig,
+  } = useConverterStore();
+
+  const { copyToClipboard } = useClipboard();
+
+  // Debounce SVG input to avoid excessive conversions
+  const debouncedSvgInput = useDebounce(svgInput, 500);
+
+  // Auto-convert when input changes
+  useEffect(() => {
+    if (debouncedSvgInput.trim()) {
+      convert();
+    }
+  }, [debouncedSvgInput, convert]);
+
+  // Load default example on mount if empty
+  useEffect(() => {
+    if (!svgInput) {
+      setSvgInput(DEFAULT_SVG_EXAMPLE);
+    }
+  }, []);
+
+  const handleCopy = () => {
+    if (generatedCode) {
+      copyToClipboard(generatedCode, 'Code copied to clipboard!');
+    }
+  };
+
+  const handleDownload = () => {
+    if (generatedCode) {
+      const filename = generateFilename(config.component.name, config);
+      downloadFile(generatedCode, filename, 'text/plain');
+    }
+  };
+
+  // Handle toggle for hiding props
+  const handleToggleProps = (hide: boolean) => {
+    updateConfig('props', {
+      ...config.props,
+      expandProps: hide ? 'none' : 'end',
+    });
+  };
+
+  // Handle toggle for hiding dimensions
+  const handleToggleDimensions = (hide: boolean) => {
+    updateConfig('dimensions', {
+      ...config.dimensions,
+      mode: hide ? 'remove' : 'keep',
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full"
-      >
-        <div className="flex justify-center gap-8 mb-8">
-          <motion.a
-            href="https://vite.dev"
-            target="_blank"
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <img src={viteLogo} className="h-24 w-24" alt="Vite logo" />
-          </motion.a>
-          <motion.a
-            href="https://react.dev"
-            target="_blank"
-            whileHover={{ scale: 1.1, rotate: -5 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <img src={reactLogo} className="h-24 w-24" alt="React logo" />
-          </motion.a>
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+      <Toaster position="top-right" />
+
+      {/* Header - Responsive */}
+      <header className="h-16 bg-[#0a0a0a] border-b border-[#2a2a2a] px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg sm:text-xl">S</span>
+          </div>
+          <div>
+            <h1 className="text-sm sm:text-lg font-bold text-[#f5f5f5]">SVG Converter</h1>
+            <p className="text-xs text-[#737373] hidden sm:block">React Native First</p>
+          </div>
         </div>
 
-        <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
-          Vite + React + TypeScript
-        </h1>
-
-        <p className="text-center text-gray-600 mb-8">
-          With TailwindCSS & Framer Motion
-        </p>
-
-        <div className="flex flex-col items-center gap-4">
-          <motion.button
-            onClick={() => setCount((count) => count + 1)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-shadow"
-          >
-            count is {count}
-          </motion.button>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-gray-500 text-sm text-center"
-          >
-            Edit <code className="bg-gray-100 px-2 py-1 rounded">src/App.tsx</code> and save to test HMR
-          </motion.p>
+        {/* Settings Toggles - Hidden on very small screens */}
+        <div className="hidden md:flex items-center gap-3 lg:gap-4">
+          <Toggle
+            checked={config.props.expandProps === 'none'}
+            onChange={handleToggleProps}
+            label="Hide Props"
+          />
+          <Toggle
+            checked={config.dimensions.mode === 'remove'}
+            onChange={handleToggleDimensions}
+            label="Hide Dimensions"
+          />
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8 grid grid-cols-3 gap-4 text-center"
-        >
-          <div className="bg-indigo-50 p-4 rounded-lg">
-            <div className="text-2xl mb-2">⚡</div>
-            <div className="text-sm font-semibold text-indigo-700">Vite</div>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button
+            onClick={handleCopy}
+            disabled={!generatedCode || isConverting}
+            icon={<Copy className="w-4 h-4" />}
+            className="text-xs sm:text-sm px-2 sm:px-4"
+          >
+            <span className="hidden sm:inline">Copy Code</span>
+            <span className="sm:hidden">Copy</span>
+          </Button>
+          <Button
+            onClick={handleDownload}
+            variant="primary"
+            disabled={!generatedCode || isConverting}
+            icon={<Download className="w-4 h-4" />}
+            className="text-xs sm:text-sm px-2 sm:px-4"
+          >
+            <span className="hidden sm:inline">Download</span>
+            <span className="sm:hidden">Save</span>
+          </Button>
+        </div>
+      </header>
+
+      {/* Main Content - Responsive Layout */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        {/* Input Panel */}
+        <div className="flex-1 flex flex-col border-b md:border-b-0 md:border-r border-[#2a2a2a] h-1/2 md:h-auto">
+          <div className="h-10 sm:h-12 bg-[#0a0a0a] border-b border-[#2a2a2a] px-3 sm:px-4 flex items-center justify-between">
+            <span className="text-xs sm:text-sm font-medium text-[#a3a3a3]">Input SVG</span>
+            <span className="text-xs text-[#737373]">
+              {svgInput.length} chars
+            </span>
           </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <div className="text-2xl mb-2">🎨</div>
-            <div className="text-sm font-semibold text-purple-700">Tailwind</div>
+          <div className="flex-1 overflow-auto">
+            <CodeMirror
+              value={svgInput}
+              height="100%"
+              theme={oneDark}
+              extensions={[xml(), EditorView.lineWrapping]}
+              onChange={(value) => setSvgInput(value)}
+              basicSetup={{
+                lineNumbers: true,
+                highlightActiveLineGutter: true,
+                highlightActiveLine: true,
+                foldGutter: true,
+              }}
+              style={{
+                height: '100%',
+                fontSize: '13px',
+              }}
+            />
           </div>
-          <div className="bg-pink-50 p-4 rounded-lg">
-            <div className="text-2xl mb-2">✨</div>
-            <div className="text-sm font-semibold text-pink-700">Framer</div>
+        </div>
+
+        {/* Output Panel */}
+        <div className="flex-1 flex flex-col h-1/2 md:h-auto">
+          <div className="h-10 sm:h-12 bg-[#0a0a0a] border-b border-[#2a2a2a] px-3 sm:px-4 flex items-center justify-between">
+            <span className="text-xs sm:text-sm font-medium text-[#a3a3a3]">
+              Output (React Native)
+            </span>
+            {isConverting && (
+              <span className="text-xs text-indigo-400 animate-pulse">
+                Converting...
+              </span>
+            )}
           </div>
-        </motion.div>
-      </motion.div>
+
+          <div className="flex-1 overflow-auto">
+            {error ? (
+              <div className="p-4 sm:p-8">
+                <div className="max-w-md mx-auto bg-[#1e1e1e] border border-red-500/30 rounded-lg p-4 sm:p-6">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="text-sm font-semibold text-red-500 mb-1">
+                        Conversion Error
+                      </h3>
+                      <p className="text-xs sm:text-sm text-[#a3a3a3] break-words">{error}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : generatedCode ? (
+              <CodeMirror
+                value={generatedCode}
+                height="100%"
+                theme={oneDark}
+                extensions={[javascript({ jsx: true, typescript: config.component.typescript }), EditorView.lineWrapping]}
+                readOnly
+                basicSetup={{
+                  lineNumbers: true,
+                  highlightActiveLineGutter: true,
+                  highlightActiveLine: true,
+                  foldGutter: true,
+                }}
+                style={{
+                  height: '100%',
+                  fontSize: '13px',
+                }}
+              />
+            ) : (
+              <div className="h-full flex items-center justify-center p-4">
+                <p className="text-[#737373] text-xs sm:text-sm text-center">
+                  Paste SVG code in the left panel to see the output
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer - Responsive */}
+      <footer className="h-7 sm:h-8 bg-[#0a0a0a] border-t border-[#2a2a2a] px-3 sm:px-6 flex items-center justify-between text-xs text-[#737373]">
+        <span className="truncate">SVG to React Native</span>
+        <span className="truncate ml-2">
+          {generatedCode && `${config.component.name}${config.component.typescript ? '.tsx' : '.jsx'}`}
+        </span>
+      </footer>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
