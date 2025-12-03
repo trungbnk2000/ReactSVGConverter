@@ -5,6 +5,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { xml } from '@codemirror/lang-xml';
 import { javascript } from '@codemirror/lang-javascript';
 import { oneDark } from '@codemirror/theme-one-dark';
+import { EditorView } from '@codemirror/view';
 import { Copy, Download, AlertCircle } from 'lucide-react';
 import { useConverterStore } from './store/converterStore';
 import { useClipboard } from './hooks/useClipboard';
@@ -60,45 +61,49 @@ function App() {
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
       <Toaster position="top-right" />
 
-      {/* Header */}
-      <header className="h-16 bg-[#0a0a0a] border-b border-[#2a2a2a] px-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">S</span>
+      {/* Header - Responsive */}
+      <header className="h-16 bg-[#0a0a0a] border-b border-[#2a2a2a] px-3 sm:px-6 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg sm:text-xl">S</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-[#f5f5f5]">SVG Converter</h1>
-            <p className="text-xs text-[#737373]">React Native First</p>
+            <h1 className="text-sm sm:text-lg font-bold text-[#f5f5f5]">SVG Converter</h1>
+            <p className="text-xs text-[#737373] hidden sm:block">React Native First</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button
             onClick={handleCopy}
             disabled={!generatedCode || isConverting}
             icon={<Copy className="w-4 h-4" />}
+            className="text-xs sm:text-sm px-2 sm:px-4"
           >
-            Copy Code
+            <span className="hidden sm:inline">Copy Code</span>
+            <span className="sm:hidden">Copy</span>
           </Button>
           <Button
             onClick={handleDownload}
             variant="primary"
             disabled={!generatedCode || isConverting}
             icon={<Download className="w-4 h-4" />}
+            className="text-xs sm:text-sm px-2 sm:px-4"
           >
-            Download
+            <span className="hidden sm:inline">Download</span>
+            <span className="sm:hidden">Save</span>
           </Button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main Content - Responsive Layout */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Input Panel */}
-        <div className="flex-1 flex flex-col border-r border-[#2a2a2a]">
-          <div className="h-12 bg-[#0a0a0a] border-b border-[#2a2a2a] px-4 flex items-center justify-between">
-            <span className="text-sm font-medium text-[#a3a3a3]">Input SVG</span>
+        <div className="flex-1 flex flex-col border-b md:border-b-0 md:border-r border-[#2a2a2a] h-1/2 md:h-auto">
+          <div className="h-10 sm:h-12 bg-[#0a0a0a] border-b border-[#2a2a2a] px-3 sm:px-4 flex items-center justify-between">
+            <span className="text-xs sm:text-sm font-medium text-[#a3a3a3]">Input SVG</span>
             <span className="text-xs text-[#737373]">
-              {svgInput.length} characters
+              {svgInput.length} chars
             </span>
           </div>
           <div className="flex-1 overflow-auto">
@@ -106,7 +111,7 @@ function App() {
               value={svgInput}
               height="100%"
               theme={oneDark}
-              extensions={[xml()]}
+              extensions={[xml(), EditorView.lineWrapping]}
               onChange={(value) => setSvgInput(value)}
               basicSetup={{
                 lineNumbers: true,
@@ -114,15 +119,18 @@ function App() {
                 highlightActiveLine: true,
                 foldGutter: true,
               }}
-              style={{ height: '100%', fontSize: '14px' }}
+              style={{
+                height: '100%',
+                fontSize: '13px',
+              }}
             />
           </div>
         </div>
 
         {/* Output Panel */}
-        <div className="flex-1 flex flex-col">
-          <div className="h-12 bg-[#0a0a0a] border-b border-[#2a2a2a] px-4 flex items-center justify-between">
-            <span className="text-sm font-medium text-[#a3a3a3]">
+        <div className="flex-1 flex flex-col h-1/2 md:h-auto">
+          <div className="h-10 sm:h-12 bg-[#0a0a0a] border-b border-[#2a2a2a] px-3 sm:px-4 flex items-center justify-between">
+            <span className="text-xs sm:text-sm font-medium text-[#a3a3a3]">
               Output (React Native)
             </span>
             {isConverting && (
@@ -134,15 +142,15 @@ function App() {
 
           <div className="flex-1 overflow-auto">
             {error ? (
-              <div className="p-8">
-                <div className="max-w-md mx-auto bg-[#1e1e1e] border border-red-500/30 rounded-lg p-6">
+              <div className="p-4 sm:p-8">
+                <div className="max-w-md mx-auto bg-[#1e1e1e] border border-red-500/30 rounded-lg p-4 sm:p-6">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                     <div>
                       <h3 className="text-sm font-semibold text-red-500 mb-1">
                         Conversion Error
                       </h3>
-                      <p className="text-sm text-[#a3a3a3]">{error}</p>
+                      <p className="text-xs sm:text-sm text-[#a3a3a3] break-words">{error}</p>
                     </div>
                   </div>
                 </div>
@@ -152,7 +160,7 @@ function App() {
                 value={generatedCode}
                 height="100%"
                 theme={oneDark}
-                extensions={[javascript({ jsx: true, typescript: config.component.typescript })]}
+                extensions={[javascript({ jsx: true, typescript: config.component.typescript }), EditorView.lineWrapping]}
                 readOnly
                 basicSetup={{
                   lineNumbers: true,
@@ -160,11 +168,14 @@ function App() {
                   highlightActiveLine: true,
                   foldGutter: true,
                 }}
-                style={{ height: '100%', fontSize: '14px' }}
+                style={{
+                  height: '100%',
+                  fontSize: '13px',
+                }}
               />
             ) : (
-              <div className="h-full flex items-center justify-center">
-                <p className="text-[#737373] text-sm">
+              <div className="h-full flex items-center justify-center p-4">
+                <p className="text-[#737373] text-xs sm:text-sm text-center">
                   Paste SVG code in the left panel to see the output
                 </p>
               </div>
@@ -173,10 +184,10 @@ function App() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="h-8 bg-[#0a0a0a] border-t border-[#2a2a2a] px-6 flex items-center justify-between text-xs text-[#737373]">
-        <span>SVG to React Native Converter</span>
-        <span>
+      {/* Footer - Responsive */}
+      <footer className="h-7 sm:h-8 bg-[#0a0a0a] border-t border-[#2a2a2a] px-3 sm:px-6 flex items-center justify-between text-xs text-[#737373]">
+        <span className="truncate">SVG to React Native</span>
+        <span className="truncate ml-2">
           {generatedCode && `${config.component.name}${config.component.typescript ? '.tsx' : '.jsx'}`}
         </span>
       </footer>
