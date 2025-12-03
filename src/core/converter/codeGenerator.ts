@@ -17,7 +17,7 @@ export function generateComponent(
   config: ConverterConfig
 ): string {
   const { component } = config;
-  const { name: componentName, typescript, memo, forwardRef, exportType } = component;
+  const { name: componentName, memo, exportType } = component;
 
   const lines: string[] = [];
 
@@ -27,7 +27,7 @@ export function generateComponent(
   lines.push('');
 
   // Generate type definitions
-  if (typescript) {
+  if (component.typescript) {
     const types = generateTypeDefinitions(componentName, config);
     if (types) {
       lines.push(types);
@@ -73,14 +73,13 @@ function generateComponentFunction(
   element: TransformedElement,
   config: ConverterConfig
 ): string {
-  const { component, props } = config;
-  const { typescript, forwardRef } = component;
+  const { component } = config;
+  const { forwardRef } = component;
 
   const lines: string[] = [];
 
   // Function signature
   const propsParam = generatePropsParameter(componentName, config);
-  const defaultPropsStr = generateDefaultProps(config);
 
   if (forwardRef) {
     lines.push(`React.forwardRef((${propsParam}, ref) => {`);
@@ -110,7 +109,7 @@ function generatePropsParameter(
   componentName: string,
   config: ConverterConfig
 ): string {
-  const { typescript, component } = config;
+  const { component } = config;
   const defaultPropsStr = generateDefaultProps(config);
 
   let param = '';
@@ -121,7 +120,7 @@ function generatePropsParameter(
     param = 'props';
   }
 
-  if (typescript) {
+  if (component.typescript) {
     param += `: ${componentName}Props`;
   }
 
@@ -204,7 +203,7 @@ function generateJSX(
  */
 function generateAttributes(
   attributes: Record<string, string>,
-  config: ConverterConfig
+  _config: ConverterConfig
 ): string[] {
   const attrs: string[] = [];
 
@@ -257,6 +256,9 @@ export function generateCompleteCode(
     ? generateTypeDefinitions(config.component.name, config)
     : '';
   const usageExample = generateUsageExample(config.component.name, config);
+
+  // Silence unused variable warning
+  void element;
 
   return {
     code,

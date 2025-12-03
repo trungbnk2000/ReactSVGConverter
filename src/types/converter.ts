@@ -225,3 +225,14 @@ export interface GeneratedCode {
   component: string;
   usageExample: string;
 }
+
+/**
+ * Configuration preset
+ */
+export interface ConfigPreset {
+  id: string;
+  name: string;
+  description?: string;
+  config: ConverterConfig;
+  createdAt: number;
+}

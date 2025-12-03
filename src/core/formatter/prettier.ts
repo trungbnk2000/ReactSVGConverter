@@ -39,6 +39,7 @@ export function formatCodeSync(
   try {
     // Note: This is a simplified version. In production, you might want
     // to use prettier/standalone for browser compatibility
+    void config; // Silence unused warning
     return code;
   } catch (error) {
     console.error('Prettier formatting error:', error);

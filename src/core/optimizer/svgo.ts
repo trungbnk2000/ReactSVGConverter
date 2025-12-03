@@ -15,7 +15,8 @@ export async function optimizeSVG(
 
   try {
     const result = optimize(svgString, {
-      plugins: config.plugins,
+      // Use SVGO's built-in plugins by name
+      plugins: config.plugins.map(p => p.name) as any,
       multipass: true,
     });
 

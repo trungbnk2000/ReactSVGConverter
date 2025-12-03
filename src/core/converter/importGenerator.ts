@@ -1,5 +1,5 @@
 // src/core/converter/importGenerator.ts
-import type { OutputFormat, ConverterConfig } from '../../types/converter';
+import type { ConverterConfig } from '../../types/converter';
 
 /**
  * Generate import statements based on format and used elements
