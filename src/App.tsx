@@ -11,6 +11,7 @@ import { useConverterStore } from './store/converterStore';
 import { useClipboard } from './hooks/useClipboard';
 import { useDebounce } from './hooks/useDebounce';
 import { Button } from './components/ui/Button';
+import { Toggle } from './components/ui/Toggle';
 import { downloadFile, generateFilename } from './utils/helpers';
 import { DEFAULT_SVG_EXAMPLE } from './utils/constants';
 
@@ -23,6 +24,7 @@ function App() {
     isConverting,
     convert,
     config,
+    updateConfig,
   } = useConverterStore();
 
   const { copyToClipboard } = useClipboard();
@@ -57,12 +59,28 @@ function App() {
     }
   };
 
+  // Handle toggle for hiding props
+  const handleToggleProps = (hide: boolean) => {
+    updateConfig('props', {
+      ...config.props,
+      expandProps: hide ? 'none' : 'end',
+    });
+  };
+
+  // Handle toggle for hiding dimensions
+  const handleToggleDimensions = (hide: boolean) => {
+    updateConfig('dimensions', {
+      ...config.dimensions,
+      mode: hide ? 'remove' : 'keep',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
       <Toaster position="top-right" />
 
       {/* Header - Responsive */}
-      <header className="h-16 bg-[#0a0a0a] border-b border-[#2a2a2a] px-3 sm:px-6 flex items-center justify-between">
+      <header className="h-16 bg-[#0a0a0a] border-b border-[#2a2a2a] px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4">
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-lg sm:text-xl">S</span>
@@ -71,6 +89,20 @@ function App() {
             <h1 className="text-sm sm:text-lg font-bold text-[#f5f5f5]">SVG Converter</h1>
             <p className="text-xs text-[#737373] hidden sm:block">React Native First</p>
           </div>
+        </div>
+
+        {/* Settings Toggles - Hidden on very small screens */}
+        <div className="hidden md:flex items-center gap-3 lg:gap-4">
+          <Toggle
+            checked={config.props.expandProps === 'none'}
+            onChange={handleToggleProps}
+            label="Hide Props"
+          />
+          <Toggle
+            checked={config.dimensions.mode === 'remove'}
+            onChange={handleToggleDimensions}
+            label="Hide Dimensions"
+          />
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
